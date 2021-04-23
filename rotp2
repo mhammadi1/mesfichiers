@@ -1,0 +1,99 @@
+package ro;
+
+public class simplex { 
+	private double[][] a; // array
+	private int M; // number of constraints 
+	private int N; // number of original variables 
+	private int[] basis; // basis[i] = basic variable corresponding to row i 
+	// only needed to print out solution, not book 
+	// sets up the simplex array
+	public simplex(double[][] A, double[] b, double[] c) { 
+		M = b.length; 
+		N = c.length; 
+		a = new double[M+1][M+N+1]; 
+		for (int i = 0; i < M; i++) 
+			for (int j = 0; j < N; j++)
+				a[i][j] = A[i][j]; 
+		for (int j = N; j < M + N; j++) 
+			a[j-N][j] = 1.0; 
+		for (int j = 0; j < N; j++) 
+			a[M][j] = c[j]; 
+		for (int i = 0; i < M; i++) 
+			a[i][M+N] = b[i]; 	
+		basis = new int[M]; 
+		for (int i = 0; i < M; i++) 
+			basis[i] = M + i; 
+	} 
+	// return optimal objective value 
+	public double value() { 
+		return -a[M][M+N]; 
+	} 
+	// run simplex algorithm starting from initial BFS 
+	public void solve() { 
+		while (true) { 
+		// find (first) objective function with positive coefficient 
+			int q; 
+			for (q = 0; q < M + N; q++) 
+				if (a[M][q] > 0) break; 
+				if (q >= M + N) break; // optimal 
+			int p; 
+			for (p = 0; p < M; p++) 
+				if (a[p][q] > 0) break; 
+			for (int i = p+1; i < M; i++) 
+				if (a[i][q] > 0) 
+					if (a[i][M+N] / a[i][q] < a[p][M+N] / a[p][q]) 
+						p = i; 
+			// pivot 
+			if (p < M) 
+				pivot(p, q); 
+			else { // unbounded 
+				System.out.println("UNBOUNDED"); 
+			return; 
+			} 
+			show(); 
+		} 
+	} 
+	// pivot on entry (p, q) using Gauss-Jordan elimination 
+	public void pivot(int p, int q) { 
+		// everything but row p and column q 
+		for (int i = 0; i <= M; i++) 
+			for (int j = 0; j <= M + N; j++) 
+				if (i != p && j != q) 
+					a[i][j] -= a[p][j] * a[i][q] / a[p][q]; 
+		// zero out column q 
+		for (int i = 0; i <= M; i++) 
+			if (i != p) 
+				a[i][q] = 0.0; 
+		// scale row p 
+		for (int j = 0; j <= M + N; j++) 
+			if (j != q) 
+				a[p][j] /= a[p][q]; 
+		a[p][q] = 1.0; 
+		// update basis 
+		basis[p] = q; 
+	} 
+	// print array 
+	public void show() { 
+		for (int i = 0; i <= M; i++) { 
+			for (int j = 0; j <= M + N; j++) { 
+				System.out.printf("%7.2f ", a[i][j]); 
+			} 
+			System.out.println(); 
+		} 
+		System.out.println("value = " + value()); 
+		for (int i = 0; i < M; i++) 
+			if (basis[i] < M) 
+				System.out.println("x_" + basis[i] + " = " + a[i][M+N]); 
+		System.out.println(); 
+	} 
+	
+public static void main(String arg[]) {
+	double[][] A = {}; 
+	double[] c = {}; 
+	double[] b = {}; 
+	simplex lp = new simplex(A, b, c); 
+	System.out.println(); 
+	lp.show(); 
+	lp.solve();
+  }    
+}
